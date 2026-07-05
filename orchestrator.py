@@ -29,7 +29,7 @@ orchestrator_agent = SequentialAgent(
     ]
 )
 
-async def run_decluttering_flow(item_description: str, image_path: str = None, user_intent: str = "Tidak tahu") -> dict:
+async def run_decluttering_flow(item_description: str, image_path: str = None, user_intent: str = "Tidak tahu", language: str = "id") -> dict:
     """
     Executes the multi-agent smart decluttering pipeline.
     Runs Repair, Value, and Sustainability assessments in parallel.
@@ -38,13 +38,33 @@ async def run_decluttering_flow(item_description: str, image_path: str = None, u
         item_description (str): User description of the item.
         image_path (str, optional): Path to the uploaded image.
         user_intent (str): Special intent of the user.
+        language (str): Chosen language ("id" or "en").
         
     Returns:
         dict: Full payload of decisions, repair info, sustainability data, and recommendations.
     """
+    # ----------------- INPUT SANITIZATION & BOUNDARY CHECKS -----------------
+    if not item_description or not item_description.strip():
+        raise ValueError("Error: Item description cannot be empty.")
+    
+    item_description = item_description.strip()
+    if len(item_description) > 500:
+        raise ValueError("Error: Input exceeds the maximum allowed limit of 500 characters.")
+    
+    # Check for potential prompt injection patterns
+    injection_patterns = [
+        "ignore previous instructions", "ignore all previous", "system:", 
+        "you are now", "act as", "override setting", "forget your instructions",
+        "dan jangan sebutkan", "bypass instruction"
+    ]
+    lower_desc = item_description.lower()
+    for pattern in injection_patterns:
+        if pattern in lower_desc:
+            raise ValueError("Error: Potential prompt injection pattern detected in input.")
+
     try:
         logger.info("Executing Agent 1: Understanding Agent...")
-        res_under = await analyze_item_details(item_description, image_path)
+        res_under = await analyze_item_details(item_description, image_path, language=language)
         logger.info(f"Understanding Agent output: {res_under}")
         
         # SKIP AGENT BASED ON INTENT
@@ -74,7 +94,8 @@ async def run_decluttering_flow(item_description: str, image_path: str = None, u
             task_repair = evaluate_repairability(
                 res_under.get("nama_barang", "Barang"),
                 res_under.get("kondisi", "Bagus"),
-                item_description
+                item_description,
+                language=language
             )
         else:
             async def get_dummy_repair():
@@ -85,7 +106,8 @@ async def run_decluttering_flow(item_description: str, image_path: str = None, u
             task_value = estimate_market_value(
                 res_under.get("nama_barang", "Barang"),
                 res_under.get("merek", "Tidak Diketahui"),
-                res_under.get("kondisi", "Bagus")
+                res_under.get("kondisi", "Bagus"),
+                language=language
             )
         else:
             async def get_dummy_value():
@@ -95,7 +117,8 @@ async def run_decluttering_flow(item_description: str, image_path: str = None, u
         if run_sustainability:
             task_sustainability = evaluate_sustainability_options(
                 res_under.get("nama_barang", "Barang"),
-                res_under.get("kondisi", "Bagus")
+                res_under.get("kondisi", "Bagus"),
+                language=language
             )
         else:
             async def get_dummy_sustainability():
@@ -112,7 +135,7 @@ async def run_decluttering_flow(item_description: str, image_path: str = None, u
         
         logger.info("Executing Agent 5: Decision Agent...")
         res_decision = await determine_final_action(
-            res_under, res_repair, res_value, res_sustainability, user_intent
+            res_under, res_repair, res_value, res_sustainability, user_intent, language=language
         )
         logger.info(f"Decision output: {res_decision}")
         
@@ -121,7 +144,8 @@ async def run_decluttering_flow(item_description: str, image_path: str = None, u
             res_decision.get("keputusan_terbaik", "Keep"),
             res_under,
             res_value.get("harga_pasaran_rp", 0),
-            user_intent
+            user_intent,
+            language=language
         )
         logger.info(f"Recommendation output: {res_recommendation}")
         
@@ -129,7 +153,8 @@ async def run_decluttering_flow(item_description: str, image_path: str = None, u
         res_action = await execute_post_decision_actions(
             res_under.get("nama_barang", "Barang"),
             res_decision.get("keputusan_terbaik", "Keep"),
-            user_intent
+            user_intent,
+            language=language
         )
         logger.info(f"Action output: {res_action}")
         

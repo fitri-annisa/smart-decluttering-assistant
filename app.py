@@ -471,6 +471,36 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# ----------------- INPUT SANITIZATION UTILITIES -----------------
+def sanitize_input(text: str) -> str:
+    """
+    Sanitizes user text inputs by stripping whitespace.
+    """
+    if not text:
+        return ""
+    return text.strip()
+
+def detect_prompt_injection(text: str) -> bool:
+    """
+    Checks if a string looks like a prompt injection attempt.
+    """
+    patterns = [
+        "ignore previous instructions",
+        "ignore all previous",
+        "system:",
+        "you are now",
+        "act as",
+        "override setting",
+        "forget your instructions",
+        "dan jangan sebutkan",
+        "bypass instruction"
+    ]
+    lower_text = text.lower()
+    for pattern in patterns:
+        if pattern in lower_text:
+            return True
+    return False
+
 # ----------------- GRID LAYOUT (SINGLE COLUMN) -----------------
 with st.container(border=True):
     st.markdown(f"<div class='section-header' style='border-bottom: none; margin-bottom: 0.5rem; padding-bottom: 0;'>⚙️ {t['input_header']}</div>", unsafe_allow_html=True)
@@ -506,8 +536,13 @@ with st.container(border=True):
 
 # ----------------- PROCESS ANALYSIS -----------------
 if analyze_btn:
-    if not item_description.strip():
+    sanitized_desc = sanitize_input(item_description)
+    if not sanitized_desc:
         st.warning("Please describe your item first." if lang == "English" else "Silakan deskripsikan barang Anda terlebih dahulu.")
+    elif len(sanitized_desc) > 500:
+        st.warning("Input is too long! Maximum character limit is 500." if lang == "English" else "Input terlalu panjang! Batas maksimal adalah 500 karakter.")
+    elif detect_prompt_injection(sanitized_desc):
+        st.error("Security Warning: Detected potential prompt injection patterns in input. Please describe your item normally." if lang == "English" else "Peringatan Keamanan: Terdeteksi pola prompt injection dalam input Anda. Silakan deskripsikan barang Anda secara wajar.")
     else:
         with st.spinner(t["loading_msg"]):
             image_path = None
@@ -518,28 +553,34 @@ if analyze_btn:
                     f.write(uploaded_image.getbuffer())
                 image_path = temp_path
             
-            results = asyncio.run(run_decluttering_flow(item_description, image_path, user_intent))
-            
-            if image_path and os.path.exists(image_path):
-                os.remove(image_path)
-            
-            st.session_state["pipeline_results"] = results
-            
-            details = results.get("item_details", {})
-            decision = results.get("decision", {})
-            reco = results.get("recommendations", {})
-            val = results.get("valuation", {})
-            
-            name = details.get("nama_barang", "Barang Tak Dikenal")
-            category = "General"
-            cond = details.get("kondisi", "Bagus")
-            dec = decision.get("keputusan_terbaik", "Keep")
-            price = val.get("harga_pasaran_rp", 0)
-            rec_text = reco.get("rekomendasi", "")
-            
-            save_success = save_item(name, category, cond, dec, price, rec_text)
-            if save_success:
-                st.rerun()
+            try:
+                lang_code = "en" if lang == "English" else "id"
+                results = asyncio.run(run_decluttering_flow(sanitized_desc, image_path, user_intent, language=lang_code))
+                
+                if image_path and os.path.exists(image_path):
+                    os.remove(image_path)
+                
+                st.session_state["pipeline_results"] = results
+                
+                details = results.get("item_details", {})
+                decision = results.get("decision", {})
+                reco = results.get("recommendations", {})
+                val = results.get("valuation", {})
+                
+                name = details.get("nama_barang", "Barang Tak Dikenal")
+                category = "General"
+                cond = details.get("kondisi", "Bagus")
+                dec = decision.get("keputusan_terbaik", "Keep")
+                price = val.get("harga_pasaran_rp", 0)
+                rec_text = reco.get("rekomendasi", "")
+                
+                save_success = save_item(name, category, cond, dec, price, rec_text)
+                if save_success:
+                    st.rerun()
+            except ValueError as ve:
+                if image_path and os.path.exists(image_path):
+                    os.remove(image_path)
+                st.error(str(ve))
 
 # ----------------- PRESENT RESULTS -----------------
 if "pipeline_results" in st.session_state:

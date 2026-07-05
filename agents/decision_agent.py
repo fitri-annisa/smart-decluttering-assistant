@@ -39,7 +39,7 @@ decision_agent = Agent(
     output_schema=DecisionOutput
 )
 
-async def determine_final_action(item_details: dict, repair_assessment: dict, value_assessment: dict, sustainability_assessment: dict, user_intent: str = "Tidak tahu") -> dict:
+async def determine_final_action(item_details: dict, repair_assessment: dict, value_assessment: dict, sustainability_assessment: dict, user_intent: str = "Tidak tahu", language: str = "id") -> dict:
     """
     Menentukan keputusan terbaik menggunakan decision_agent.
     
@@ -49,6 +49,7 @@ async def determine_final_action(item_details: dict, repair_assessment: dict, va
         value_assessment (dict): Hasil analisis harga dari value_agent.
         sustainability_assessment (dict): Hasil analisis jejak karbon dari sustainability_agent.
         user_intent (str): Intent khusus pengguna (Tidak tahu, Ingin menjual, Ingin donasikan, Ingin perbaiki, Ingin daur ulang).
+        language (str): Kode bahasa ("id" atau "en").
         
     Returns:
         dict: Keputusan terbaik, nilai skor tiap opsi, dan alasan terperinci.
@@ -91,6 +92,13 @@ async def determine_final_action(item_details: dict, repair_assessment: dict, va
                 f"- Jika user_intent adalah 'Ingin daur ulang', naikkan (boost) skor kelayakan opsi 'Recycle' sebesar +20 poin.\n"
                 f"Sesuaikan keputusan_terbaik dan alasan penjelasan agar fokus dan berorientasi pada intent tersebut."
             )
+
+        lang_instruction = (
+            "You must respond entirely in English. All field values, explanations, and recommendations must be in English."
+            if language == "en" else
+            "Kamu harus merespons sepenuhnya dalam Bahasa Indonesia. Semua nilai field, penjelasan, dan rekomendasi harus dalam Bahasa Indonesia."
+        )
+        prompt += f"\n\n{lang_instruction}"
 
         new_message = types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
         

@@ -1,123 +1,129 @@
 # 🧹 Smart Decluttering Assistant
 
-[English](#english) | [Bahasa Indonesia](#bahasa-indonesia)
+![Python 3.12](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.32.0-FF4B4B?logo=streamlit&logoColor=white)
+![Google ADK](https://img.shields.io/badge/Google--ADK-v0.1-orange?logo=google&logoColor=white)
+![Gemini 2.0 Flash Lite](https://img.shields.io/badge/Gemini-2.0--Flash--Lite-9B51E0?logo=google-gemini&logoColor=white)
+
+An intelligent multi-agent decluttering platform that helps you decide whether to keep, repair, sell, donate, or recycle your unused items.
 
 ---
 
-## English
+## 📌 Overview
+The **Smart Decluttering Assistant** is an end-to-end multi-agent AI system designed to analyze household clutter using multimodal inputs (text descriptions and photos). Powered by the **Google Agent Development Kit (ADK)** and **Gemini 2.0 Flash Lite**, the system evaluates market price values, assesses physical repair feasibility, calculates environmental impact, and provides specific, real-world locations in Indonesia to sell, donate, repair, or recycle items.
 
-Smart Decluttering Assistant is an intelligent multi-agent AI system designed to help users declutter unused items. Powered by the **Google Agent Development Kit (ADK)** and `gemini-2.5-flash`, the system analyzes item descriptions and images, performs marketplace price comparisons and repairability evaluations, and recommends the best course of action (Keep, Repair, Sell, Donate, or Recycle).
+*This project was built as a capstone submission for the **Kaggle 5-Day AI Agents Intensive Capstone**.*
 
-### 🚀 Features
+---
 
-*   **7 Specialized AI Agents**:
-    1.  **Understanding Agent**: Classifies items and assesses physical condition using text & images.
-    2.  **Repair Agent**: Estimates if the item can be fixed, spare parts availability, and repair costs.
-    3.  **Value Agent**: Utilizes the Google Search tool to check current second-hand prices on Tokopedia, OLX, or Shopee.
-    4.  **Sustainability Agent**: Estimates CO2 footprint reduction and eco-disposal options.
-    5.  **Decision Agent**: Computes a final decision based on weighted scoring: **Repair (40%)**, **Value (35%)**, and **Sustainability (25%)**.
-    6.  **Recommendation Agent**: Generates concise, actionable next steps in Bahasa Indonesia or English.
-    7.  **Action Agent**: Uses Google Search to find physical repair shops, recycling hubs (like Waste4Change), or donation points in Indonesia.
-*   **Sequential & Parallel Orchestration**: Leverages ADK's parallel flow (`asyncio.gather`) to run Value, Repair, and Sustainability analyses concurrently.
-*   **Streamlit Dashboard**: Offers localization toggles (Indonesian / English), Light/Dark themes, Custom typography (Playfair Display & Roboto), custom progress bars, and localized spinners.
-*   **SQLite Database**: Automatically logs all analyzed items to `declutter_inventory.db` for historical tracking and deletion in the sidebar.
+## 🚀 Features
+- **Multi-Agent AI Pipeline**: Leverages 7 specialized collaborative agents developed using the Google ADK.
+- **Intent-Based Adaptive Orchestration**: Optimizes processing efficiency by dynamically running only relevant evaluation agents based on the user's intent.
+- **Multimodal Inputs**: Evaluates items using combined descriptive text inputs and uploaded physical photos.
+- **Real-Time Market Search**: Grounded with real-time web searches to retrieve actual second-hand pricing, donation programs, and repair shops in Indonesia.
+- **Bilingual Interface**: Seamless translation toggle between Indonesian (🇮🇩 ID) and English (🇬🇧 EN) across all UI cards and results.
+- **Modern Notion/Linear Style UI**: A clean, editorial design supporting light mode and dark mode color themes.
+- **Inventory History**: Persistent storage of analyzed items using an SQLite backend, featuring status-colored indicators and deletion options.
+- **Model Context Protocol (MCP) Integration**: Integrates real-time external tools dynamically via the stdio MCP JSON-RPC protocol, utilizing Brave Search MCP for live web scraping and Google Maps MCP for searching physical store drop-points in Indonesia.
 
-### 📁 Project Structure
+---
 
+## 📐 Architecture
+The orchestrator routes user inputs dynamically to minimize model latency. When an intent is selected (e.g., "Want to sell"), non-relevant evaluation agents (like repair or sustainability) are skipped, routing directly to the final recommendation and action stages.
+
+### Orchestration Flowchart
+
+![Architecture Flowchart](assets/flowchart.png)
+
+### Agent Directory
+
+1. **understanding_agent**: Identifies the item brand, model, physical condition, and buy-date (used to accurately calculate estimated age up to 2025).
+2. **repair_agent**: Evaluates physical defect issues, estimates spare part availability, and calculates repair feasibility scores.
+3. **value_agent**: Checks live second-hand market listings in Indonesia (Tokopedia, OLX, Shopee) and assigns a demand/resell score.
+4. **sustainability_agent**: Estimates potential carbon footprint reduction and evaluates eco-friendly disposal routes.
+5. **decision_agent**: Computes weighted scores (Repair: 40%, Value: 35%, Sustainability: 25%) and boosts user-intent choices by +20 points.
+6. **recommendation_agent**: Drafts tailored advice and steps to carry out the selected decision.
+7. **action_agent**: Connects users to specific physical outlets, websites, contact numbers, or drop points in Indonesia.
+
+---
+
+## 🛠️ Tech Stack
+- **Google ADK (Agent Development Kit)**: Orchestration and agent declaration.
+- **Gemini 2.0 Flash Lite**: Base language and vision model for reasoning.
+- **Model Context Protocol (MCP)**: Native stdio JSON-RPC Brave Search & Google Maps integrations.
+- **Streamlit**: Single-column responsive user dashboard.
+- **SQLite**: Structured database for inventory logging.
+- **Python 3.12**: Core runtime environment.
+
+---
+
+## ⚙️ Getting Started
+
+### Prerequisites
+- Python 3.12 installed on your machine.
+- A Gemini API Key from Google AI Studio.
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/smart-decluttering-assistant.git
+   cd smart-decluttering-assistant
+   ```
+
+2. **Install required packages:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Set your API Key:**
+   ```bash
+   export GEMINI_API_KEY="your_api_key_here"
+   ```
+
+4. **Launch the dashboard:**
+   ```bash
+   streamlit run app.py
+   ```
+
+---
+
+## 🔑 Environment Variables
+Configure the following keys in your environment:
+
+- `GEMINI_API_KEY` (Required): Used to authenticate with the Gemini Developer API. Get one from [Google AI Studio](https://aistudio.google.com/).
+- `BRAVE_API_KEY` (Optional): Required to activate real-time web grounding via Brave Search MCP.
+- `GOOGLE_MAPS_API_KEY` (Optional): Required to activate drop-point queries via Google Maps MCP.
+
+---
+
+## 📁 Project Structure
 ```text
 smart-decluttering-assistant/
 │
 ├── agents/
-│   ├── understanding_agent.py    # Item identification (Multimodal)
-│   ├── repair_agent.py           # Repairability assessment
-│   ├── value_agent.py            # Market price search (Google Search)
-│   ├── sustainability_agent.py   # Eco-impact analysis
-│   ├── decision_agent.py         # Weighted decision maker
-│   ├── recommendation_agent.py   # User recommendation compiler
-│   └── action_agent.py           # Drop-point locator (Google Search)
+│   ├── understanding_agent.py   # Extract brand, condition, buy date (Multimodal)
+│   ├── repair_agent.py          # Assess repair costs & parts availability
+│   ├── value_agent.py           # Fetch market resale values via Google Search
+│   ├── sustainability_agent.py  # Estimate carbon reductions
+│   ├── decision_agent.py        # Compute final weighted decision scores
+│   ├── recommendation_agent.py  # Compile user next steps
+│   └── action_agent.py          # Retrieve physical location map links in Indonesia
 │
-├── app.py                        # Streamlit frontend dashboard
-├── orchestrator.py               # Sequential & Parallel ADK workflow
-├── inventory_db.py               # SQLite CRUD operations
-└── requirements.txt              # Project dependencies
-```
-
-### ⚙️ Getting Started
-
-#### 1. Install Dependencies
-Clone or copy the directory, then install the package requirements:
-```bash
-pip install -r requirements.txt
-```
-
-#### 2. Configure Gemini API Key
-Export your Gemini API Key in your terminal:
-```bash
-export GEMINI_API_KEY="your-api-key-here"
-```
-
-#### 3. Run the Dashboard
-Launch the Streamlit server:
-```bash
-streamlit run app.py
+├── app.py                       # Notion/Linear inspired Streamlit dashboard
+├── orchestrator.py              # Orchestration & path execution logic
+├── inventory_db.py              # SQLite storage management
+├── requirements.txt             # Project library requirements
+└── flowchart.md                 # System architecture diagram
 ```
 
 ---
 
-## Bahasa Indonesia
+## 🔒 Security Features
+The platform implements multiple security guards to ensure data integrity and model safety:
+- **Secure Key Management**: API credentials (`GEMINI_API_KEY`, `BRAVE_API_KEY`, and `GOOGLE_MAPS_API_KEY`) are managed strictly using local environment variables or standard `.env` configuration files. Keys are never hardcoded inside source files.
+- **Input Sanitization & Boundary Guards**: To defend agents against Prompt Injection, the input sequence performs validation filters at both the Streamlit UI and Orchestrator entry levels. Description text inputs are trimmed, limited to a maximum length of **500 characters**, and rejected if they contain injection signatures (e.g. *"ignore previous instructions"*, *"system:"*, *"you are now"*, etc.).
+- **Local SQLite Backend**: The inventory history is logged to a local SQLite database file (`declutter_inventory.db`) stored on the host system. No external database servers or services are exposed.
+- **Zero Third-Party Exfiltration**: No user inputs, uploaded photos, or processed meta-data are dispatched to any external endpoints or third-party servers, other than standard API communication with the Google Gemini API.
 
-Smart Decluttering Assistant adalah sistem multi-agent AI cerdas yang dirancang untuk membantu pengguna menentukan keputusan terbaik terhadap barang-barang tak terpakai. Didukung oleh **Google Agent Development Kit (ADK)** dan model `gemini-2.5-flash`, sistem ini menganalisis deskripsi teks serta foto barang, menelusuri harga pasar, menilai kelayakan perbaikan, serta memberikan rekomendasi terbaik (Keep, Repair, Sell, Donate, atau Recycle).
 
-### 🚀 Fitur Utama
-
-*   **7 Agen AI Spesialis**:
-    1.  **Understanding Agent**: Mengidentifikasi barang dan menilai kondisi fisiknya menggunakan teks & gambar (Multimodal).
-    2.  **Repair Agent**: Menilai kelayakan perbaikan barang, ketersediaan sparepart, serta estimasi biaya perbaikan.
-    3.  **Value Agent**: Menggunakan alat Google Search untuk mencari harga bekas terkini di Tokopedia, OLX, atau Shopee.
-    4.  **Sustainability Agent**: Memperkirakan jejak karbon (CO2) yang dihasilkan dan menyarankan opsi pembuangan ramah lingkungan.
-    5.  **Decision Agent**: Menentukan keputusan final menggunakan pembobotan: **Repair (40%)**, **Value (35%)**, dan **Sustainability (25%)**.
-    6.  **Recommendation Agent**: Menyusun panduan langkah konkret selanjutnya dalam Bahasa Indonesia atau English.
-    7.  **Action Agent**: Menggunakan Google Search untuk mencari titik jemput daur ulang (seperti Waste4Change), yayasan donasi, atau bengkel servis terdekat di Indonesia.
-*   **Orkestrasi Paralel & Sekuensial**: Menggunakan workflow ADK paralel (`asyncio.gather`) untuk mempercepat analisis nilai jual, perbaikan, dan keberlanjutan secara bersamaan.
-*   **Dashboard Streamlit**: Menyediakan toggle bahasa (Bahasa Indonesia / English), tema Terang/Gelap, tipografi khusus (Playfair Display & Roboto), progress bar kustom, serta loading state yang responsif.
-*   **Database SQLite**: Menyimpan riwayat barang yang dianalisis secara otomatis ke dalam `declutter_inventory.db` untuk dimonitor dan dihapus langsung melalui sidebar.
-
-### 📁 Struktur Proyek
-
-```text
-smart-decluttering-assistant/
-│
-├── agents/
-│   ├── understanding_agent.py    # Identifikasi Barang (Multimodal)
-│   ├── repair_agent.py           # Analisis Perbaikan
-│   ├── value_agent.py            # Pencarian Harga Pasar (Google Search)
-│   ├── sustainability_agent.py   # Analisis Dampak Lingkungan
-│   ├── decision_agent.py         # Penentu Keputusan (Weighted)
-│   ├── recommendation_agent.py   # Penyusun Rekomendasi
-│   └── action_agent.py           # Pencarian Lokasi Fisik (Google Search)
-│
-├── app.py                        # Dashboard Streamlit UI
-├── orchestrator.py               # Orkestrasi Aliran Kerja ADK (Paralel)
-├── inventory_db.py               # Operasi Database SQLite (CRUD)
-└── requirements.txt              # Daftar Dependensi Proyek
-```
-
-### ⚙️ Cara Menjalankan Aplikasi
-
-#### 1. Instal Dependensi
-Masuk ke direktori proyek dan pasang dependensi yang diperlukan:
-```bash
-pip install -r requirements.txt
-```
-
-#### 2. Konfigurasi API Key Gemini
-Ekspor API Key Gemini Anda di terminal:
-```bash
-export GEMINI_API_KEY="your-api-key-here"
-```
-
-#### 3. Jalankan Aplikasi
-Jalankan server Streamlit:
-```bash
-streamlit run app.py
-```

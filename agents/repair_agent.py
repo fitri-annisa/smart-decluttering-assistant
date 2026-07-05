@@ -27,7 +27,7 @@ repair_agent = Agent(
     output_schema=RepairOutput
 )
 
-async def evaluate_repairability(item_name: str, condition: str, issue_description: str = None) -> dict:
+async def evaluate_repairability(item_name: str, condition: str, issue_description: str = None, language: str = "id") -> dict:
     """
     Evaluasi kelayakan perbaikan barang.
     
@@ -35,6 +35,7 @@ async def evaluate_repairability(item_name: str, condition: str, issue_descripti
         item_name (str): Nama barang.
         condition (str): Kondisi barang.
         issue_description (str, optional): Deskripsi kerusakan atau masalah pada barang.
+        language (str): Kode bahasa ("id" atau "en").
         
     Returns:
         dict: Hasil evaluasi perbaikan (bisa_diperbaiki, estimasi_biaya_rp, skor).
@@ -59,11 +60,17 @@ async def evaluate_repairability(item_name: str, condition: str, issue_descripti
                 app_name=runner.app_name, user_id="user_default", session_id="session_repair"
             )
 
+        lang_instruction = (
+            "You must respond entirely in English. All field values, explanations, and recommendations must be in English."
+            if language == "en" else
+            "Kamu harus merespons sepenuhnya dalam Bahasa Indonesia. Semua nilai field, penjelasan, dan rekomendasi harus dalam Bahasa Indonesia."
+        )
         prompt = (
             f"Evaluasi perbaikan untuk barang berikut:\n"
             f"Nama Barang: {item_name}\n"
             f"Kondisi: {condition}\n"
-            f"Deskripsi Masalah: {issue_description or 'Tidak disebutkan masalah khusus'}"
+            f"Deskripsi Masalah: {issue_description or 'Tidak disebutkan masalah khusus'}\n\n"
+            f"{lang_instruction}"
         )
         new_message = types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
         

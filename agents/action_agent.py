@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import subprocess
 from pydantic import BaseModel, Field
 from google.adk import Agent
 from google.adk.tools import google_search
@@ -9,6 +10,130 @@ from google.genai import types
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def call_mcp_stdio_server(command: list[str], env: dict, tool_name: str, arguments: dict) -> str:
+    """
+    Calls a local MCP server over stdio using JSON-RPC 2.0 protocol.
+    """
+    try:
+        process = subprocess.Popen(
+            command,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env={**os.environ, **env}
+        )
+    except Exception as e:
+        raise RuntimeError(f"Failed to start MCP server process: {str(e)}")
+    
+    def send_msg(msg):
+        payload = json.dumps(msg) + "\n"
+        process.stdin.write(payload)
+        process.stdin.flush()
+        
+    def read_response(expected_id):
+        while True:
+            line = process.stdout.readline()
+            if not line:
+                break
+            try:
+                data = json.loads(line)
+                if data.get("id") == expected_id:
+                    return data
+            except json.JSONDecodeError:
+                continue
+        return None
+
+    try:
+        # 1. Initialize
+        init_req = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "SmartDeclutteringClient", "version": "1.0"}
+            }
+        }
+        send_msg(init_req)
+        init_res = read_response(1)
+        if not init_res:
+            raise RuntimeError("MCP initialization failed or timed out.")
+            
+        # 2. Initialized Notification
+        initialized_notification = {
+            "jsonrpc": "2.0",
+            "method": "notifications/initialized"
+        }
+        send_msg(initialized_notification)
+        
+        # 3. Call Tool
+        tool_req = {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/call",
+            "params": {
+                "name": tool_name,
+                "arguments": arguments
+            }
+        }
+        send_msg(tool_req)
+        tool_res = read_response(2)
+        
+        if tool_res and "result" in tool_res:
+            content = tool_res["result"].get("content", [])
+            text_parts = [c.get("text", "") for c in content if c.get("type") == "text"]
+            return "\n".join(text_parts)
+        else:
+            err = tool_res.get("error", {}) if tool_res else {}
+            raise RuntimeError(f"MCP tool call failed: {err.get('message', 'Unknown error')}")
+            
+    finally:
+        try:
+            process.stdin.close()
+        except:
+            pass
+        try:
+            process.terminate()
+            process.wait(timeout=2)
+        except:
+            pass
+
+def brave_search_mcp_tool(query: str) -> str:
+    """
+    Search the web for real-time information using the Brave Search MCP server (Requires BRAVE_API_KEY).
+    """
+    brave_key = os.environ.get("BRAVE_API_KEY")
+    if not brave_key:
+        return "ERROR: BRAVE_API_KEY is not set in environment. Use google_search fallback tool."
+        
+    cmd = ["npx", "-y", "@modelcontextprotocol/server-brave-search"]
+    env = {"BRAVE_API_KEY": brave_key}
+    try:
+        logger.info(f"Invoking Brave Search MCP tool for query: {query}")
+        result = call_mcp_stdio_server(cmd, env, "brave_web_search", {"query": query})
+        return result
+    except Exception as e:
+        return f"ERROR running Brave Search MCP: {str(e)}"
+
+def google_maps_mcp_tool(query: str) -> str:
+    """
+    Search for physical locations, coordinates, and details in Indonesia using Google Maps MCP server (Requires GOOGLE_MAPS_API_KEY).
+    """
+    maps_key = os.environ.get("GOOGLE_MAPS_API_KEY")
+    if not maps_key:
+        return "ERROR: GOOGLE_MAPS_API_KEY is not set in environment. Use google_search fallback tool."
+        
+    cmd = ["npx", "-y", "@modelcontextprotocol/server-google-maps"]
+    env = {"GOOGLE_MAPS_API_KEY": maps_key}
+    try:
+        logger.info(f"Invoking Google Maps MCP tool for query: {query}")
+        result = call_mcp_stdio_server(cmd, env, "search_places", {"query": query})
+        return result
+    except Exception as e:
+        return f"ERROR running Google Maps MCP: {str(e)}"
 
 class LocationDetail(BaseModel):
     nama: str = Field(description="Nama tempat/platform/program spesifik di Indonesia (misal: Tokopedia - iPhone 13 Second, Mitra Care Apple, Waste4Change)")
@@ -32,10 +157,14 @@ action_search_agent = Agent(
         "- Jika user_intent adalah 'Ingin perbaiki': Cari nama toko servis/service center resmi terdekat, alamat fisik lengkap, rating toko jika ada, serta link Google Maps spesifik menuju lokasi tersebut.\n"
         "- Jika user_intent adalah 'Ingin daur ulang': Cari nama program daur ulang resmi (misal: Waste4Change, program Trade In Samsung/Apple) beserta drop point e-waste/bank sampah, cara daftar/proses daur ulang, dan tautan pendaftaran/lokasi valid.\n"
         "- Jika user_intent adalah 'Tidak tahu': Cari ringkasan singkat dari keempat opsi di atas secara umum.\n\n"
+        "Gunakan tools yang tersedia. Anda memiliki brave_search_mcp_tool untuk mencari informasi web secara real-time via Brave Search MCP, "
+        "dan google_maps_mcp_tool untuk mencari tempat servis/donasi/daur ulang secara fisik via Google Maps MCP. "
+        "Jika environment key tidak terkonfigurasi untuk MCP tools tersebut (response mengembalikan pesan 'ERROR: ... API_KEY is not set'), "
+        "kembalilah menggunakan google_search bawaan sebagai fallback utama.\n\n"
         "PENTING: Jangan pernah memberikan tautan homepage generik (seperti tokopedia.com, olx.co.id, google.com). URL harus memiliki path spesifik (misal: link produk search Tokopedia/OLX, link lokasi Google Maps spesifik, link form pendaftaran). "
         "Jika hasil spesifik tidak ditemukan, tuliskan panduan teks (langkah demi langkah) tentang cara mencarinya secara manual."
     ),
-    tools=[google_search]
+    tools=[google_search, brave_search_mcp_tool, google_maps_mcp_tool]
 )
 
 # Define the Google ADK Agent for formatting action recommendations (no tools, has output schema)
@@ -58,7 +187,7 @@ action_agent = Agent(
     output_schema=ActionOutput
 )
 
-async def execute_post_decision_actions(item_name: str, final_decision: str, user_intent: str = "Tidak tahu") -> dict:
+async def execute_post_decision_actions(item_name: str, final_decision: str, user_intent: str = "Tidak tahu", language: str = "id") -> dict:
     """
     Mencari lokasi/resource terdekat untuk memproses keputusan decluttering.
     
@@ -66,6 +195,7 @@ async def execute_post_decision_actions(item_name: str, final_decision: str, use
         item_name (str): Nama barang yang dievaluasi.
         final_decision (str): Keputusan akhir (Keep, Repair, Sell, Donate, Recycle).
         user_intent (str): Intent khusus pengguna.
+        language (str): Kode bahasa ("id" atau "en").
         
     Returns:
         dict: Daftar lokasi, judul section, panduan pencarian, dan tautan terkait.
@@ -77,6 +207,12 @@ async def execute_post_decision_actions(item_name: str, final_decision: str, use
             load_dotenv()
         except ImportError:
             pass
+
+        lang_instruction = (
+            "You must respond entirely in English. All field values, explanations, and recommendations must be in English."
+            if language == "en" else
+            "Kamu harus merespons sepenuhnya dalam Bahasa Indonesia. Semua nilai field, penjelasan, dan rekomendasi harus dalam Bahasa Indonesia."
+        )
 
         # Step 1: Run search agent to search for locations
         runner_search = InMemoryRunner(agent=action_search_agent)
@@ -124,6 +260,7 @@ async def execute_post_decision_actions(item_name: str, final_decision: str, use
                     "- Cari cara daftar/proses daur ulang barang tersebut di Indonesia.\n"
                     "- Sertakan nama tempat daur ulang/drop point, langkah pendaftaran, dan tautan pendaftaran/lokasi valid."
                 )
+        prompt_search += f"\n\n{lang_instruction}"
         msg_search = types.Content(role="user", parts=[types.Part.from_text(text=prompt_search)])
         
         collected_search = []
@@ -148,7 +285,7 @@ async def execute_post_decision_actions(item_name: str, final_decision: str, use
                 app_name=runner_format.app_name, user_id="user_default", session_id="session_action_format"
             )
 
-        prompt_format = f"Format hasil riset berikut ke JSON terstruktur:\n{search_results}"
+        prompt_format = f"Format hasil riset berikut ke JSON terstruktur:\n{search_results}\n\n{lang_instruction}"
         msg_format = types.Content(role="user", parts=[types.Part.from_text(text=prompt_format)])
         
         collected_format = []

@@ -26,7 +26,7 @@ recommendation_agent = Agent(
     output_schema=RecommendationOutput
 )
 
-async def generate_recommendations(final_decision: str, item_details: dict, market_value: float = None, user_intent: str = "Tidak tahu") -> dict:
+async def generate_recommendations(final_decision: str, item_details: dict, market_value: float = None, user_intent: str = "Tidak tahu", language: str = "id") -> dict:
     """
     Menghasilkan rekomendasi konkrit berdasarkan keputusan akhir.
     
@@ -35,6 +35,7 @@ async def generate_recommendations(final_decision: str, item_details: dict, mark
         item_details (dict): Informasi detail barang dari understanding_agent.
         market_value (float, optional): Estimasi harga jual kembali.
         user_intent (str): Intent khusus pengguna.
+        language (str): Kode bahasa ("id" atau "en").
         
     Returns:
         dict: Rekomendasi utama dan daftar langkah selanjutnya.
@@ -73,6 +74,14 @@ async def generate_recommendations(final_decision: str, item_details: dict, mark
                 f"Rekomendasi utama dan langkah selanjutnya harus langsung fokus ke intent '{user_intent}' ini. "
                 f"Jangan terlalu banyak membahas opsi atau alternatif lain."
             )
+
+        lang_instruction = (
+            "You must respond entirely in English. All field values, explanations, and recommendations must be in English."
+            if language == "en" else
+            "Kamu harus merespons sepenuhnya dalam Bahasa Indonesia. Semua nilai field, penjelasan, dan rekomendasi harus dalam Bahasa Indonesia."
+        )
+        prompt += f"\n\n{lang_instruction}"
+
         new_message = types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
         
         # Execute the agent

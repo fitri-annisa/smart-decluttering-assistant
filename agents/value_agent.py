@@ -47,7 +47,7 @@ value_agent = Agent(
     output_schema=ValueOutput
 )
 
-async def estimate_market_value(item_name: str, brand: str = None, condition: str = "Bagus") -> dict:
+async def estimate_market_value(item_name: str, brand: str = None, condition: str = "Bagus", language: str = "id") -> dict:
     """
     Mencari harga pasaran barang menggunakan Google Search.
     
@@ -55,6 +55,7 @@ async def estimate_market_value(item_name: str, brand: str = None, condition: st
         item_name (str): Nama barang.
         brand (str, optional): Merek barang.
         condition (str): Kondisi barang.
+        language (str): Kode bahasa ("id" atau "en").
         
     Returns:
         dict: Hasil taksiran harga (harga_pasaran_rp, tingkat_permintaan, skor).
@@ -66,6 +67,12 @@ async def estimate_market_value(item_name: str, brand: str = None, condition: st
             load_dotenv()
         except ImportError:
             pass
+
+        lang_instruction = (
+            "You must respond entirely in English. All field values, explanations, and recommendations must be in English."
+            if language == "en" else
+            "Kamu harus merespons sepenuhnya dalam Bahasa Indonesia. Semua nilai field, penjelasan, dan rekomendasi harus dalam Bahasa Indonesia."
+        )
 
         # Step 1: Run search agent to look up market value
         runner_search = InMemoryRunner(agent=value_search_agent)
@@ -80,7 +87,8 @@ async def estimate_market_value(item_name: str, brand: str = None, condition: st
         brand_str = f" dengan merek {brand}" if brand else ""
         prompt_search = (
             f"Lakukan pencarian harga barang bekas '{item_name}'{brand_str} "
-            f"dengan kondisi '{condition}' di situs marketplace Indonesia seperti Tokopedia, OLX, Shopee."
+            f"dengan kondisi '{condition}' di situs marketplace Indonesia seperti Tokopedia, OLX, Shopee.\n\n"
+            f"{lang_instruction}"
         )
         msg_search = types.Content(role="user", parts=[types.Part.from_text(text=prompt_search)])
         
@@ -106,7 +114,7 @@ async def estimate_market_value(item_name: str, brand: str = None, condition: st
                 app_name=runner_format.app_name, user_id="user_default", session_id="session_value_format"
             )
 
-        prompt_format = f"Format hasil riset harga berikut ke JSON terstruktur:\n{search_results}"
+        prompt_format = f"Format hasil riset harga berikut ke JSON terstruktur:\n{search_results}\n\n{lang_instruction}"
         msg_format = types.Content(role="user", parts=[types.Part.from_text(text=prompt_format)])
         
         collected_format = []

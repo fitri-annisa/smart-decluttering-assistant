@@ -28,13 +28,14 @@ sustainability_agent = Agent(
     output_schema=SustainabilityOutput
 )
 
-async def evaluate_sustainability_options(item_name: str, category: str) -> dict:
+async def evaluate_sustainability_options(item_name: str, category: str, language: str = "id") -> dict:
     """
     Evaluasi opsi pembuangan barang yang ramah lingkungan.
     
     Args:
         item_name (str): Nama barang.
         category (str): Kategori barang.
+        language (str): Kode bahasa ("id" atau "en").
         
     Returns:
         dict: Hasil evaluasi keberlanjutan (estimasi_co2_kg, rekomendasi_eco, skor).
@@ -59,10 +60,16 @@ async def evaluate_sustainability_options(item_name: str, category: str) -> dict
                 app_name=runner.app_name, user_id="user_default", session_id="session_sustainability"
             )
 
+        lang_instruction = (
+            "You must respond entirely in English. All field values, explanations, and recommendations must be in English."
+            if language == "en" else
+            "Kamu harus merespons sepenuhnya dalam Bahasa Indonesia. Semua nilai field, penjelasan, dan rekomendasi harus dalam Bahasa Indonesia."
+        )
         prompt = (
             f"Evaluasi keberlanjutan untuk barang berikut:\n"
             f"Nama Barang: {item_name}\n"
-            f"Kategori: {category}"
+            f"Kategori: {category}\n\n"
+            f"{lang_instruction}"
         )
         new_message = types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
         

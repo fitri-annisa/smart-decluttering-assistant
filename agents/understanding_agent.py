@@ -33,13 +33,14 @@ understanding_agent = Agent(
     output_schema=UnderstandingOutput
 )
 
-async def analyze_item_details(item_description: str, image_path: str = None) -> dict:
+async def analyze_item_details(item_description: str, image_path: str = None, language: str = "id") -> dict:
     """
     Menganalisis detail barang menggunakan Gemini multimodal (teks + gambar).
     
     Args:
         item_description (str): Deskripsi barang dari user.
         image_path (str, optional): Path ke file gambar barang.
+        language (str): Kode bahasa ("id" atau "en").
         
     Returns:
         dict: Hasil analisis berupa nama_barang, kondisi, merek, umur_perkiraan_tahun.
@@ -69,7 +70,12 @@ async def analyze_item_details(item_description: str, image_path: str = None) ->
             )
 
         # Build parts (text prompt + optional image)
-        prompt_text = f"Analisis barang berikut:\nDeskripsi: {item_description}"
+        lang_instruction = (
+            "You must respond entirely in English. All field values, explanations, and recommendations must be in English."
+            if language == "en" else
+            "Kamu harus merespons sepenuhnya dalam Bahasa Indonesia. Semua nilai field, penjelasan, dan rekomendasi harus dalam Bahasa Indonesia."
+        )
+        prompt_text = f"Analisis barang berikut:\nDeskripsi: {item_description}\n\n{lang_instruction}"
         parts = [types.Part.from_text(text=prompt_text)]
         
         if image_path and os.path.exists(image_path):
