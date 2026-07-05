@@ -18,7 +18,7 @@ class UnderstandingOutput(BaseModel):
 # Define the Google ADK Agent
 understanding_agent = Agent(
     name="understanding_agent",
-    model="gemini-2.5-flash-lite",
+    model="gemini-2.5-flash",
     instruction=(
         "Anda adalah Agen Pemahaman Barang. Tugas Anda adalah menganalisis deskripsi barang "
         "dan/atau foto barang yang disediakan oleh pengguna. Identifikasi nama barang, "

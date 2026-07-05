@@ -24,7 +24,7 @@ class DecisionOutput(BaseModel):
 # Define the Google ADK Agent for compiling assessments and deciding status
 decision_agent = Agent(
     name="decision_agent",
-    model="gemini-2.5-flash-lite",
+    model="gemini-2.5-flash",
     instruction=(
         "Anda adalah Agen Keputusan. Tugas Anda adalah mengintegrasikan evaluasi dari Agen Perbaikan, "
         "Agen Penaksir Nilai, dan Agen Keberlanjutan. "

@@ -16,7 +16,7 @@ class RecommendationOutput(BaseModel):
 # Define the Google ADK Agent for generating user-friendly advice
 recommendation_agent = Agent(
     name="recommendation_agent",
-    model="gemini-2.5-flash-lite",
+    model="gemini-2.5-flash",
     instruction=(
         "Anda adalah Agen Rekomendasi. Tugas Anda adalah memberikan saran konkrit dan actionable "
         "dalam Bahasa Indonesia berdasarkan keputusan final yang diambil oleh Agen Keputusan. "

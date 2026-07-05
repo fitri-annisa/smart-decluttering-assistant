@@ -23,7 +23,7 @@ class ActionOutput(BaseModel):
 # Helper search agent for taking action (has tools, no output schema)
 action_search_agent = Agent(
     name="action_search_agent",
-    model="gemini-2.5-flash-lite",
+    model="gemini-2.5-flash",
     instruction=(
         "Anda adalah Agen Riset Lokasi. Tugas Anda adalah mencari lokasi fisik atau daring "
         "spesifik, nyata, dan aktif di Indonesia beserta alamat lengkap, kontak/WA jika ada, estimasi harga/langkah daftar, dan tautan (URL) SPESIFIK untuk memproses keputusan decluttering barang:\n"
@@ -41,7 +41,7 @@ action_search_agent = Agent(
 # Define the Google ADK Agent for formatting action recommendations (no tools, has output schema)
 action_agent = Agent(
     name="action_agent",
-    model="gemini-2.5-flash-lite",
+    model="gemini-2.5-flash",
     instruction=(
         "Anda adalah Agen Tindakan (Action Agent). Tugas Anda adalah memformat hasil riset lokasi "
         "menjadi format JSON terstruktur sesuai skema output yang ditentukan.\n\n"

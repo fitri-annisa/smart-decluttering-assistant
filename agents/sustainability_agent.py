@@ -17,7 +17,7 @@ class SustainabilityOutput(BaseModel):
 # Define the Google ADK Agent for sustainability analysis
 sustainability_agent = Agent(
     name="sustainability_agent",
-    model="gemini-2.5-flash-lite",
+    model="gemini-2.5-flash",
     instruction=(
         "Anda adalah Agen Keberlanjutan Lingkungan. Tugas Anda adalah memperkirakan dampak lingkungan "
         "dari pembuangan barang berdasarkan nama barang, kategori, dan kondisinya. "

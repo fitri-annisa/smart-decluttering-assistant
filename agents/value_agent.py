@@ -31,7 +31,7 @@ value_search_agent = Agent(
 # Define the Google ADK Agent for item valuation formatting (no tools, has output schema)
 value_agent = Agent(
     name="value_agent",
-    model="gemini-2.5-flash-lite",
+    model="gemini-2.5-flash",
     instruction=(
         "Anda adalah Agen Penaksir Nilai Barang. Tugas Anda adalah menganalisis data hasil riset harga "
         "dan memformatnya menjadi JSON terstruktur sesuai skema output yang ditentukan.\n\n"

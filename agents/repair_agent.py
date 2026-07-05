@@ -17,7 +17,7 @@ class RepairOutput(BaseModel):
 # Define the Google ADK Agent for repair estimation
 repair_agent = Agent(
     name="repair_agent",
-    model="gemini-2.5-flash-lite",
+    model="gemini-2.5-flash",
     instruction=(
         "Anda adalah Agen Perbaikan Barang. Tugas Anda adalah menganalisis apakah barang "
         "dapat diperbaiki berdasarkan nama barang, kondisinya, dan deskripsi masalahnya. "
