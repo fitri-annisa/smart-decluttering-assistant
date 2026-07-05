@@ -19,7 +19,7 @@ init_db()
 TRANSLATIONS = {
     "Bahasa Indonesia": {
         "title": "🧹 Smart Decluttering Assistant",
-        "subtitle": "Analisis cerdas barang tak terpakai Anda dengan tim multi-agent AI.",
+        "subtitle": "Ubah tumpukan barang tak terpakai menjadi keputusan cerdas dan actionable secara instan.",
         "history_title": "Riwayat Inventori",
         "empty_history": "Belum ada barang di inventori.",
         "total_items": "Total barang: {count}",
@@ -56,7 +56,7 @@ TRANSLATIONS = {
     },
     "English": {
         "title": "🧹 Smart Decluttering Assistant",
-        "subtitle": "Intelligent analysis of your unused items with a multi-agent AI team.",
+        "subtitle": "Turn clutter into smart, actionable decluttering decisions instantly.",
         "history_title": "Inventory History",
         "empty_history": "No items in inventory yet.",
         "total_items": "Total items: {count}",
@@ -94,118 +94,186 @@ TRANSLATIONS = {
 }
 
 # ----------------- SIDEBAR CONTROLS -----------------
-# 1. Language Selector
-lang = st.sidebar.selectbox("Language / Bahasa", ["Bahasa Indonesia", "English"])
+# Initialize session state for language selection if not present
+if "language_choice" not in st.session_state:
+    st.session_state["language_choice"] = "Bahasa Indonesia"
+
+# 1. Language Selector Pills (Horizontal Radio control)
+st.sidebar.markdown("<div style='font-size: 0.8rem; font-weight: 600; margin-bottom: 0.3rem; opacity: 0.7; font-family: \"Inter\", sans-serif;'>LANGUAGE / BAHASA</div>", unsafe_allow_html=True)
+lang_choice = st.sidebar.radio(
+    "Language Selection",
+    ["🇮🇩 ID", "🇬🇧 EN"],
+    index=0 if st.session_state["language_choice"] == "Bahasa Indonesia" else 1,
+    horizontal=True,
+    label_visibility="collapsed"
+)
+
+if lang_choice == "🇮🇩 ID":
+    st.session_state["language_choice"] = "Bahasa Indonesia"
+else:
+    st.session_state["language_choice"] = "English"
+
+lang = st.session_state["language_choice"]
 t = TRANSLATIONS[lang]
 
-# 2. Dark/Light Theme Toggle
-light_theme = st.sidebar.toggle("Light Mode ☀️", value=False)
+# 2. Dark/Light Theme Toggle (Subtle toggle control)
+light_theme = st.sidebar.toggle("☀️ Light Mode", value=False)
 
 # Theme Style Calculations
 if light_theme:
-    bg_color = "#F8F9FF"
+    bg_color = "#FAFAFA"
     card_bg = "#FFFFFF"
-    text_color = "#1A1A2E"
+    text_color = "#1A1A1A"
     border_color = "#E0E0E0"
     sec_text_color = "#666666"
-    sub_title_gradient = "linear-gradient(135deg, #6C63FF, #FF6584)"
     sidebar_bg = "#FFFFFF"
-    sidebar_text = "#1A1A2E"
+    sidebar_text = "#1A1A1A"
+    hero_bg = "linear-gradient(180deg, #F3F3F3 0%, #FAFAFA 100%)"
     code_bg = "#EAEAEA"
-    code_text = "#FF6584"
+    code_text = "#4CAF82"
 else:
-    bg_color = "#1A1A2E"
-    card_bg = "#16213E"
-    text_color = "#FFFFFF"
-    border_color = "#2E3B5E"
+    bg_color = "#111111"
+    card_bg = "#1E1E1E"
+    text_color = "#F0F0F0"
+    border_color = "#2A2A2A"
     sec_text_color = "#888888"
-    sub_title_gradient = "linear-gradient(135deg, #6C63FF, #FF6584)"
-    sidebar_bg = "#16213E"
-    sidebar_text = "#FFFFFF"
-    code_bg = "#2E3B5E"
-    code_text = "#FF6584"
+    sidebar_bg = "#1A1A1A"
+    sidebar_text = "#F0F0F0"
+    hero_bg = "linear-gradient(180deg, #1E1E1E 0%, #111111 100%)"
+    code_bg = "#2A2A2A"
+    code_text = "#4CAF82"
 
 # Injected CSS Typography and Aesthetics
 st.markdown(f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     
     /* Global Background and Fonts */
     .stApp {{
         background-color: {bg_color} !important;
         color: {text_color} !important;
-        font-family: 'Roboto', sans-serif !important;
+        font-family: 'Inter', sans-serif !important;
     }}
     
-    h1, h2, h3, h4, h5, h6, .main-title, .section-header {{
-        font-family: 'Playfair Display', serif !important;
+    h1, h2, h3, h4, h5, h6 {{
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
         color: {text_color} !important;
+        font-weight: 700 !important;
     }}
     
-    .main-title {{
+    .hero-banner {{
+        background: {hero_bg};
+        border-radius: 16px;
+        padding: 2.5rem 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid {border_color};
+        text-align: center;
+    }}
+    
+    .hero-title {{
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-size: 2.8rem;
         font-weight: 800;
-        background: {sub_title_gradient};
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.2rem;
+        letter-spacing: -1px;
+        color: {text_color} !important;
+        margin-bottom: 0.5rem;
+        line-height: 1.1;
     }}
     
-    .sub-title {{
-        font-size: 1.1rem;
+    .hero-subtitle {{
+        font-family: 'Inter', sans-serif !important;
+        font-size: 1.15rem;
         color: {sec_text_color};
+        font-weight: 400;
+        margin: 0 auto;
+        max-width: 600px;
+    }}
+    
+    .input-card {{
+        background-color: {card_bg};
+        border-radius: 16px;
+        padding: 1.8rem;
+        border: 1px solid {border_color};
         margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+    }}
+    
+    .result-card {{
+        background-color: {card_bg};
+        border-radius: 16px;
+        padding: 1.8rem;
+        border: 1px solid {border_color};
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.01);
     }}
     
     .card {{
         background-color: {card_bg};
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1.2rem;
         border: 1px solid {border_color};
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.2rem;
         color: {text_color};
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }}
+    
+    /* Notion/Linear clean style for st.container(border=True) */
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
+        background-color: {card_bg} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 16px !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.01) !important;
+        margin-bottom: 1.5rem !important;
     }}
     
     .highlight-card {{
         background-color: {card_bg};
-        border: 2px solid #6C63FF;
+        border: 1px solid {border_color};
+        border-left: 5px solid #E8A87C;
         border-radius: 12px;
         padding: 1.5rem;
         margin-bottom: 1.5rem;
         color: {text_color};
     }}
     
-    .best-decision {{
-        font-size: 2.2rem;
+    .best-decision-badge {{
+        display: inline-block;
+        background-color: #E8A87C;
+        color: #1A1A1A !important;
+        padding: 0.4rem 1.2rem;
+        border-radius: 30px;
         font-weight: 700;
-        color: #FF6584;
+        font-size: 1.1rem;
         margin-top: 0.5rem;
-        margin-bottom: 0.5rem;
-        font-family: 'Playfair Display', serif !important;
+        margin-bottom: 1rem;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }}
     
     .location-card {{
         background-color: {card_bg};
-        border-radius: 8px;
+        border-radius: 10px;
         padding: 1rem;
         margin-bottom: 0.8rem;
-        border-left: 4px solid #6C63FF;
+        border-left: 4px solid #4CAF82;
         border-right: 1px solid {border_color};
         border-top: 1px solid {border_color};
         border-bottom: 1px solid {border_color};
     }}
     
     .location-title {{
-        font-weight: 600;
-        color: {text_color};
-        font-size: 1rem;
+        font-weight: 700;
+        color: {text_color} !important;
+        font-size: 1.05rem;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
     }}
     
     .location-link {{
         font-size: 0.9rem;
-        color: #FF6584;
+        color: #4CAF82;
         text-decoration: none;
+        font-weight: 600;
     }}
     
     .location-link:hover {{
@@ -213,12 +281,12 @@ st.markdown(f"""
     }}
     
     .section-header {{
-        font-size: 1.4rem;
-        font-weight: 700;
+        font-size: 1.5rem;
+        font-weight: 800;
         color: {text_color};
-        margin-bottom: 1rem;
-        border-bottom: 1px solid {border_color};
-        padding-bottom: 0.3rem;
+        margin-bottom: 1.2rem;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        letter-spacing: -0.3px;
     }}
 
     /* Sidebar Theme override */
@@ -241,6 +309,7 @@ st.markdown(f"""
     [data-testid="stMarkdownContainer"] span,
     [data-testid="stMarkdownContainer"] strong {{
         color: {text_color} !important;
+        font-family: 'Inter', sans-serif !important;
     }}
 
     /* Selectbox dropdown container and values overrides */
@@ -249,6 +318,7 @@ st.markdown(f"""
         background-color: {card_bg} !important;
         color: {text_color} !important;
         border: 1px solid {border_color} !important;
+        border-radius: 8px !important;
     }}
     [data-testid="stSelectbox"] [data-baseweb="select"] * {{
         background-color: transparent !important;
@@ -257,13 +327,14 @@ st.markdown(f"""
     div[data-baseweb="popover"] ul {{
         background-color: {card_bg} !important;
         border: 1px solid {border_color} !important;
+        border-radius: 8px !important;
     }}
     div[data-baseweb="popover"] li {{
         background-color: {card_bg} !important;
         color: {text_color} !important;
     }}
     div[data-baseweb="popover"] li:hover {{
-        background-color: #6C63FF !important;
+        background-color: #4CAF82 !important;
         color: #FFFFFF !important;
     }}
 
@@ -272,32 +343,12 @@ st.markdown(f"""
         background-color: {card_bg} !important;
         color: {text_color} !important;
         border: 1px solid {border_color} !important;
+        border-radius: 8px !important;
+        min-height: 120px !important;
     }}
     textarea::placeholder {{
         color: {sec_text_color} !important;
         opacity: 0.7 !important;
-    }}
-
-    /* Code tag formatting (for inline badges) */
-    code {{
-        background-color: {code_bg} !important;
-        color: {code_text} !important;
-        border: 1px solid {border_color} !important;
-        font-weight: 600 !important;
-    }}
-
-    /* Spinner, Alerts, & Notification Contrast overrides */
-    div[data-testid="stNotification"],
-    div[class*="stAlert"],
-    div[class*="stNotificationContent"] {{
-        background-color: {card_bg} !important;
-        border: 1px solid {border_color} !important;
-        color: {text_color} !important;
-    }}
-    div[data-testid="stNotification"] *,
-    div[class*="stAlert"] *,
-    div[class*="stNotificationContent"] * {{
-        color: {text_color} !important;
     }}
 
     /* File Uploader overrides */
@@ -305,64 +356,71 @@ st.markdown(f"""
         background-color: {card_bg} !important;
         color: {text_color} !important;
         border: 1px dashed {border_color} !important;
+        border-radius: 8px !important;
+        padding: 0.5rem !important;
     }}
     [data-testid="stFileUploader"] * {{
         background-color: transparent !important;
         color: {text_color} !important;
     }}
-    [data-testid="stFileUploader"] div[data-testid="stFileUploaderFileList"] div,
-    [data-testid="stFileUploader"] div[data-testid="stFileUploaderFileList"] span,
-    [data-testid="stFileUploader"] div[data-testid="stFileUploaderFileList"] button {{
-        background-color: {card_bg} !important;
-        color: {text_color} !important;
-    }}
 
-    /* Primary Action Buttons styling with premium micro-interaction */
+    /* Primary Action Buttons styling: flat design */
     .stButton > button[kind="primary"] {{
-        background: linear-gradient(135deg, #6C63FF, #FF6584) !important;
-        border: none !important;
+        width: 100% !important;
+        height: 52px !important;
+        background-color: #2D2D2D !important;
         color: #FFFFFF !important;
+        border: 1px solid #2D2D2D !important;
+        border-radius: 12px !important;
+        font-size: 1rem !important;
         font-weight: 600 !important;
-        transition: transform 0.1s ease, box-shadow 0.1s ease !important;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+        font-family: 'Inter', sans-serif !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        box-shadow: none !important;
     }}
     .stButton > button[kind="primary"]:hover {{
-        transform: translateY(-1px) !important;
-        box-shadow: 0 6px 12px rgba(108, 99, 255, 0.3) !important;
+        background-color: #4CAF82 !important;
+        border-color: #4CAF82 !important;
+        color: #FFFFFF !important;
+        transform: none !important;
+        box-shadow: none !important;
     }}
     .stButton > button[kind="primary"]:active {{
-        transform: translateY(0px) !important;
+        background-color: #3e9c71 !important;
+        border-color: #3e9c71 !important;
     }}
 
     /* Compact Delete Button styling inside sidebar */
     [data-testid="stSidebar"] button {{
-        padding: 0.15rem 0.4rem !important;
-        font-size: 0.8rem !important;
-        line-height: 1.2 !important;
-        border-radius: 4px !important;
-        border: 1px solid {border_color} !important;
-        background-color: {card_bg} !important;
+        width: auto !important;
+        height: 28px !important;
+        padding: 0.1rem 0.4rem !important;
+        font-size: 0.75rem !important;
+        background-color: transparent !important;
         color: {sidebar_text} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 6px !important;
+        font-weight: 400 !important;
     }}
     [data-testid="stSidebar"] button:hover {{
-        border-color: #FF6584 !important;
-        color: #FF6584 !important;
+        background-color: rgba(220, 53, 69, 0.1) !important;
+        border-color: #DC3545 !important;
+        color: #DC3545 !important;
     }}
 </style>
 """, unsafe_allow_html=True)
 
 # Helper function to draw custom styled progress bars
 def draw_custom_progress(label, value):
-    bar_bg = "#2E3B5E" if not light_theme else "#E0E0E0"
+    bar_bg = "#2A2A2A" if not light_theme else "#E0E0E0"
     st.markdown(f"""
-    <div style="margin-bottom: 0.8rem;">
-        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.2rem;">
-            <span>{label}</span>
-            <span>{value}/100</span>
+    <div style="margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: space-between;">
+        <div style="width: 100px; font-size: 0.9rem; font-weight: 600; color: {text_color}; font-family: 'Inter', sans-serif;">{label}</div>
+        <div style="flex-grow: 1; background-color: {bar_bg}; border-radius: 6px; height: 12px; margin: 0 1rem; overflow: hidden; position: relative;">
+            <div style="background-color: #4CAF82; height: 100%; width: {value}%; border-radius: 6px;"></div>
         </div>
-        <div style="background-color: {bar_bg}; border-radius: 6px; height: 10px; width: 100%; overflow: hidden;">
-            <div style="background-color: #6C63FF; height: 100%; width: {value}%; border-radius: 6px;"></div>
-        </div>
+        <div style="width: 45px; text-align: right; font-size: 0.9rem; font-weight: 700; color: {text_color}; font-family: 'Inter', sans-serif;">{value}%</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -374,61 +432,66 @@ if not inventory:
     st.sidebar.info(t["empty_history"])
 else:
     st.sidebar.caption(t["total_items"].replace("{count}", str(len(inventory))))
-    st.sidebar.markdown("<hr style='margin: 0.3rem 0;' />", unsafe_allow_html=True)
+    st.sidebar.markdown("<div style='margin-bottom: 0.6rem;'></div>", unsafe_allow_html=True)
     
     # Render compact sidebar cards
     for item in inventory:
-        col_side_text, col_side_del = st.sidebar.columns([4, 1])
+        dec = item['decision']
+        # Determine colored border-left based on decision
+        if dec == "Keep":
+            border_color_left = "#4CAF82" # Hijau
+        elif dec == "Repair":
+            border_color_left = "#007BFF" # Biru
+        elif dec == "Sell":
+            border_color_left = "#E8A87C" # Kuning/Orange
+        else: # Donate, Recycle
+            border_color_left = "#FF6584" # Merah/Pink
+            
+        col_side_text, col_side_del = st.sidebar.columns([4.8, 1.2])
         with col_side_text:
-            st.markdown(
-                f"<div style='font-size: 0.9rem; color: {sidebar_text}; line-height: 1.3;'>"
-                f"<strong>{item['name']}</strong> | <span style='color: #FF6584; font-weight: 600;'>{item['condition']}</span> &rarr; <strong>{item['decision']}</strong>"
-                f"</div>",
-                unsafe_allow_html=True
-            )
-            if item['value_rp'] > 0:
-                st.markdown(
-                    f"<div style='font-size: 0.75rem; color: {sec_text_color}; margin-top: 0.1rem;'>"
-                    f"Value: Rp {item['value_rp']:,}"
-                    f"</div>",
-                    unsafe_allow_html=True
-                )
+            value_info = f"<br/><span style='font-size: 0.75rem; opacity: 0.75;'>Value: Rp {item['value_rp']:,}</span>" if item['value_rp'] > 0 else ""
+            st.markdown(f"""
+            <div style='background-color: {card_bg}; border-radius: 6px; padding: 0.5rem; border-left: 4px solid {border_color_left}; border-right: 1px solid {border_color}; border-top: 1px solid {border_color}; border-bottom: 1px solid {border_color}; line-height: 1.25;'>
+                <div style='font-size: 0.8rem; font-weight: 600; color: {sidebar_text}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'>{item['name']}</div>
+                <div style='font-size: 0.7rem; color: {sec_text_color}; margin-top: 0.1rem;'>{item['condition']} &rarr; <b>{dec}</b>{value_info}</div>
+            </div>
+            """, unsafe_allow_html=True)
         with col_side_del:
+            # Render a tiny, compact delete button
             if st.button("🗑️", key=f"del_{item['id']}"):
                 delete_inventory_item(item['id'])
                 st.sidebar.success(t["success_delete"])
                 st.rerun()
-        st.sidebar.markdown("<hr style='margin: 0.2rem 0;' />", unsafe_allow_html=True)
 
 # ----------------- MAIN PAGE HEADER -----------------
-st.markdown(f"<div class='main-title'>{t['title']}</div>", unsafe_allow_html=True)
-st.markdown(f"<div class='sub-title'>{t['subtitle']}</div>", unsafe_allow_html=True)
+st.markdown(f"""
+<div class='hero-banner'>
+    <div class='hero-title'>{t['title']}</div>
+    <div class='hero-subtitle'>{t['subtitle']}</div>
+</div>
+""", unsafe_allow_html=True)
 
-# ----------------- GRID LAYOUT -----------------
-col_input, col_result = st.columns([2, 3])
-
-with col_input:
-    st.markdown(f"<div class='section-header'>{t['input_header']}</div>", unsafe_allow_html=True)
+# ----------------- GRID LAYOUT (SINGLE COLUMN) -----------------
+with st.container(border=True):
+    st.markdown(f"<div class='section-header' style='border-bottom: none; margin-bottom: 0.5rem; padding-bottom: 0;'>⚙️ {t['input_header']}</div>", unsafe_allow_html=True)
     
-    # Description input box
-    item_description = st.text_area(
-        t["desc_label"],
-        placeholder=t["desc_placeholder"],
-        height=150
-    )
-    
-    # Image uploader
-    uploaded_image = st.file_uploader(
-        t["img_label"],
-        type=["jpg", "png", "jpeg"]
-    )
-    
-    # User Intent selector
-    selected_intent_str = st.selectbox(
-        t["intent_label"],
-        t["intent_options"]
-    )
-    # Map selection back to normalized Indonesian keys for pipeline logic
+    col_left, col_right = st.columns([3, 2])
+    with col_left:
+        item_description = st.text_area(
+            t["desc_label"],
+            placeholder=t["desc_placeholder"],
+            height=140
+        )
+    with col_right:
+        uploaded_image = st.file_uploader(
+            t["img_label"],
+            type=["jpg", "png", "jpeg"]
+        )
+        selected_intent_str = st.selectbox(
+            t["intent_label"],
+            t["intent_options"]
+        )
+        
     intent_mapping = {
         0: "Tidak tahu",
         1: "Ingin menjual",
@@ -439,7 +502,6 @@ with col_input:
     selected_index = t["intent_options"].index(selected_intent_str)
     user_intent = intent_mapping.get(selected_index, "Tidak tahu")
     
-    # Action button
     analyze_btn = st.button(t["btn_analyze"], type="primary", use_container_width=True)
 
 # ----------------- PROCESS ANALYSIS -----------------
@@ -449,7 +511,6 @@ if analyze_btn:
     else:
         with st.spinner(t["loading_msg"]):
             image_path = None
-            # Store uploaded image temporarily if present
             if uploaded_image:
                 temp_dir = tempfile.gettempdir()
                 temp_path = os.path.join(temp_dir, uploaded_image.name)
@@ -457,17 +518,13 @@ if analyze_btn:
                     f.write(uploaded_image.getbuffer())
                 image_path = temp_path
             
-            # Execute orchestrator flow
             results = asyncio.run(run_decluttering_flow(item_description, image_path, user_intent))
             
-            # Remove temp image file
             if image_path and os.path.exists(image_path):
                 os.remove(image_path)
             
-            # Store results in Session State
             st.session_state["pipeline_results"] = results
             
-            # Extract attributes to save to SQLite database
             details = results.get("item_details", {})
             decision = results.get("decision", {})
             reco = results.get("recommendations", {})
@@ -480,68 +537,79 @@ if analyze_btn:
             price = val.get("harga_pasaran_rp", 0)
             rec_text = reco.get("rekomendasi", "")
             
-            # Database insertion
             save_success = save_item(name, category, cond, dec, price, rec_text)
             if save_success:
                 st.rerun()
 
 # ----------------- PRESENT RESULTS -----------------
-with col_result:
-    st.markdown(f"<div class='section-header'>{t['results_header']}</div>", unsafe_allow_html=True)
+if "pipeline_results" in st.session_state:
+    results = st.session_state["pipeline_results"]
     
-    if "pipeline_results" not in st.session_state:
-        st.info(t["prompt_info"])
-    else:
-        results = st.session_state["pipeline_results"]
-        
-        details = results.get("item_details", {})
-        repair_info = results.get("repair_info", {})
-        valuation = results.get("valuation", {})
-        sustainability = results.get("sustainability", {})
-        decision = results.get("decision", {})
-        recommendations = results.get("recommendations", {})
-        action_taken = results.get("action_taken", {})
-        
-        # 1. Brief Item Overview
+    details = results.get("item_details", {})
+    repair_info = results.get("repair_info", {})
+    valuation = results.get("valuation", {})
+    sustainability = results.get("sustainability", {})
+    decision = results.get("decision", {})
+    recommendations = results.get("recommendations", {})
+    action_taken = results.get("action_taken", {})
+    
+    st.markdown(f"<div class='section-header' style='margin-top: 2rem;'>📊 {t['results_header']}</div>", unsafe_allow_html=True)
+    
+    # 1. Brief Item Overview & Decision Card combined in a full width Notion-style container
+    with st.container(border=True):
         st.markdown(f"""
-        <div class='card'>
-            <h3 style="margin-top:0;">📦 {details.get('nama_barang', 'Item')}</h3>
-            <p style="margin-bottom:0;"><b>{t['brand']}:</b> {details.get('merek', 'Tidak Diketahui')} | <b>{t['age']}:</b> {details.get('umur_perkiraan_tahun', 0)} {t['years']}</p>
-            <p style="margin-bottom:0; margin-top:0.4rem;"><b>{t['condition']}:</b> {details.get('kondisi', 'Tidak Diketahui')}</p>
+        <div style="font-size: 2.2rem; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.5px; margin-bottom: 0.2rem; color: {text_color};">
+            📦 {details.get('nama_barang', 'Item')}
         </div>
         """, unsafe_allow_html=True)
         
-        # 2. Decision Card
         st.markdown(f"""
-        <div class='highlight-card'>
-            <div style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #888888;">{t['best_decision']}</div>
-            <div class='best-decision'>{decision.get('keputusan_terbaik', 'Keep')}</div>
-            <p style="margin: 0; color: {text_color}; opacity: 0.9;">{decision.get('alasan', '')}</p>
+        <div style="font-size: 0.95rem; opacity: 0.8; margin-bottom: 1rem; color: {text_color}; font-family: 'Inter', sans-serif;">
+            <b>{t['brand']}:</b> {details.get('merek', 'Tidak Diketahui')} | 
+            <b>{t['age']}:</b> {details.get('umur_perkiraan_tahun', 0)} {t['years']} | 
+            <b>{t['condition']}:</b> {details.get('kondisi', 'Tidak Diketahui')}
         </div>
         """, unsafe_allow_html=True)
         
-        # 3. Option Scores (Custom Progress Bars)
-        st.markdown(f"<h3>📈 {t['scores_header']}</h3>", unsafe_allow_html=True)
-        scores = decision.get("skor_tiap_opsi", {})
-        default_options = ["Keep", "Repair", "Sell", "Donate", "Recycle"]
-        for opt in default_options:
-            score_val = scores.get(opt, 0)
-            draw_custom_progress(opt, min(max(int(score_val), 0), 100))
-        
-        # 4. Actionable recommendations
-        st.markdown(f"<h3>💬 {t['reco_header']}</h3>", unsafe_allow_html=True)
-        st.write(recommendations.get("rekomendasi", ""))
-        
-        st.markdown(f"<h4>{t['steps_header']}</h4>", unsafe_allow_html=True)
-        steps = recommendations.get("langkah_selanjutnya", [])
-        for step in steps:
-            st.markdown(f"- {step}")
+        st.markdown(f"""
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid {border_color};">
+            <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; font-weight: 600; margin-bottom: 0.4rem; color: {text_color};">{t['best_decision']}</div>
+            <div class="best-decision-badge">{decision.get('keputusan_terbaik', 'Keep')}</div>
+            <div style="font-size: 1rem; line-height: 1.5; color: {text_color}; font-family: 'Inter', sans-serif; opacity: 0.95;">
+                {decision.get('alasan', '')}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # 2. Option Scores & Actionable recommendations side-by-side inside cards (Notion column grid look)
+    col_scores, col_reco = st.columns([1, 1])
+    
+    with col_scores:
+        with st.container(border=True):
+            st.markdown(f"<div style='font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; font-family: \"Plus Jakarta Sans\"; color: {text_color};'>📈 {t['scores_header']}</div>", unsafe_allow_html=True)
+            scores = decision.get("skor_tiap_opsi", {})
+            default_options = ["Keep", "Repair", "Sell", "Donate", "Recycle"]
+            for opt in default_options:
+                score_val = scores.get(opt, 0)
+                draw_custom_progress(opt, min(max(int(score_val), 0), 100))
+                
+    with col_reco:
+        with st.container(border=True):
+            st.markdown(f"<div style='font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; font-family: \"Plus Jakarta Sans\"; color: {text_color};'>💬 {t['reco_header']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size: 0.95rem; line-height: 1.5; color: {text_color}; font-family: \"Inter\", sans-serif; margin-bottom: 1rem;'>{recommendations.get('rekomendasi', '')}</div>", unsafe_allow_html=True)
             
-        # 5. Local maps/URLs resources
+            st.markdown(f"<div style='font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: {text_color};'>📋 {t['steps_header']}</div>", unsafe_allow_html=True)
+            steps = recommendations.get("langkah_selanjutnya", [])
+            for step in steps:
+                st.markdown(f"<div style='font-size: 0.9rem; margin-bottom: 0.3rem; font-family: \"Inter\", sans-serif; color: {text_color};'>• {step}</div>", unsafe_allow_html=True)
+
+    # 3. Locations and Search Guide Card in a single full-width container at bottom
+    with st.container(border=True):
         section_title = action_taken.get("judul_section")
         if not section_title:
             section_title = t['locations_header']
-        st.markdown(f"<h3>📍 {section_title}</h3>", unsafe_allow_html=True)
+            
+        st.markdown(f"<div style='font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; font-family: \"Plus Jakarta Sans\"; color: {text_color};'>📍 {section_title}</div>", unsafe_allow_html=True)
         
         rekomendasi_lokasi = action_taken.get("rekomendasi_lokasi", [])
         locations = action_taken.get("lokasi", [])
@@ -552,7 +620,7 @@ with col_result:
                 nama = item.get("nama", "Tidak Diketahui")
                 alamat = item.get("alamat", "")
                 url = item.get("tautan", "#")
-                alamat_html = f"<div style='font-size:0.9rem; opacity:0.8; margin-top:0.3rem; margin-bottom:0.5rem;'>📍 {alamat}</div>" if alamat else ""
+                alamat_html = f"<div style='font-size:0.85rem; opacity:0.8; margin-top:0.2rem; margin-bottom:0.4rem; color: {text_color};'>📍 {alamat}</div>" if alamat else ""
                 st.markdown(f"""
                 <div class='location-card'>
                     <div class='location-title'>🏢 {nama}</div>
@@ -574,8 +642,10 @@ with col_result:
         panduan = action_taken.get("panduan_pencarian")
         if panduan:
             st.markdown(f"""
-            <div style='background-color: {card_bg}; border-radius: 8px; padding: 1rem; margin-top: 0.8rem; border-left: 4px solid #FF6584; border-right: 1px solid {border_color}; border-top: 1px solid {border_color}; border-bottom: 1px solid {border_color};'>
-                <div style='font-weight: 600; font-size: 0.95rem; margin-bottom: 0.3rem; color: {text_color};'>ℹ️ Panduan Pencarian / Search Guide</div>
-                <div style='font-size: 0.9rem; opacity: 0.9; color: {text_color};'>{panduan}</div>
+            <div style='background-color: {card_bg}; border-radius: 8px; padding: 0.8rem; margin-top: 1rem; border-left: 4px solid #FF6584; border-right: 1px solid {border_color}; border-top: 1px solid {border_color}; border-bottom: 1px solid {border_color};'>
+                <div style='font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; color: {text_color}; font-family: \"Plus Jakarta Sans\";'>ℹ️ Panduan Pencarian / Search Guide</div>
+                <div style='font-size: 0.85rem; opacity: 0.85; color: {text_color}; font-family: \"Inter\";'>{panduan}</div>
             </div>
             """, unsafe_allow_html=True)
+else:
+    st.info(t["prompt_info"])
