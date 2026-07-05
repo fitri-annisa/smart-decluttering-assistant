@@ -1,6 +1,12 @@
-import streamlit as st
-import asyncio
 import os
+import streamlit as st
+
+# Bridge st.secrets ke environment variable
+# agar agent bisa baca GEMINI_API_KEY via os.getenv
+if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+    os.environ["GEMINI_API_KEY"] = st.secrets["GEMINI_API_KEY"]
+
+import asyncio
 import tempfile
 from orchestrator import run_decluttering_flow
 from inventory_db import init_db, save_item, get_inventory, delete_inventory_item
